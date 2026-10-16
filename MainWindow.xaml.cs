@@ -6,31 +6,50 @@ namespace CyberSafeAwarenessBot2
 {
     public partial class MainWindow : Window
     {
+        private readonly Chatbot _chatbot;
+
         public MainWindow()
         {
             InitializeComponent();
+            _chatbot = new Chatbot();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            string message = UserInput.Text.Trim();
-
-            if (string.IsNullOrWhiteSpace(message))
+            try
             {
-                MessageBox.Show("Please enter a message.",
-                    "Empty Message",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
+                string message = UserInput.Text.Trim();
+
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    MessageBox.Show(
+                        "Please enter a message.",
+                        "Empty Message",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return;
+                }
+
+                string response = _chatbot.GetResponse(message);
+
+                ChatHistory.Text += Environment.NewLine
+                    + "You: " + message
+                    + Environment.NewLine
+                    + "Bot: " + response
+                    + Environment.NewLine;
+
+                UserInput.Clear();
+                UserInput.Focus();
             }
-
-            ChatHistory.Text += Environment.NewLine
-                + "You: " + message
-                + Environment.NewLine
-                + "Bot: Thank you for your message. I will help you with cybersecurity questions."
-                + Environment.NewLine;
-
-            UserInput.Clear();
+            catch (Exception)
+            {
+                MessageBox.Show(
+                    "Sorry, something went wrong. Please try again.",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
     }
 }
