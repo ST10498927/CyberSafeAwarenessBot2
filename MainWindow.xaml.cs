@@ -1,24 +1,36 @@
-﻿using System.Text;
+﻿
+using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace CyberSafeAwarenessBot2
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void SendButton_Click(object sender, RoutedEventArgs e)
+        {
+            string message = UserInput.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                MessageBox.Show("Please enter a message.",
+                    "Empty Message",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            ChatHistory.Text += Environment.NewLine
+                + "You: " + message
+                + Environment.NewLine
+                + "Bot: Thank you for your message. I will help you with cybersecurity questions."
+                + Environment.NewLine;
+
+            UserInput.Clear();
         }
     }
 }
