@@ -1,0 +1,27 @@
+name: CyberSafe Awareness Bot CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore CyberSafeAwarenessBot2.sln
+
+      - name: Build application
+        run: dotnet build CyberSafeAwarenessBot2.sln --configuration Release --no-restore
