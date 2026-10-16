@@ -43,9 +43,9 @@
                             Margin="0,0,16,0"
                             VerticalAlignment="Center">
 
-                        <Image Source="CyberSafeASCII.png"
-                               Width="125"
-                               Height="100"
+                        <Image Source="/CyberSafeAwarenessBot2;component/CyberSafeASCII.png"
+                               Width="64"
+                               Height="64"
                                Stretch="Uniform"/>
                     </Border>
 
