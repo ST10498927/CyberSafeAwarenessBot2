@@ -14,20 +14,23 @@ namespace CyberSafeAwarenessBot2
         private string _userName = "";
         private string _favouriteTopic = "";
 
+        // Delegate used to process messages.
+        private readonly ResponseMethod _responseMethod;
+
         private readonly Dictionary<string, List<string>> _responses =
             new Dictionary<string, List<string>>
             {
                 ["password"] = new List<string>
                 {
-                    "Use a long, unique password for every account.",
-                    "Consider using a password manager to store strong passwords.",
+                    "Use long, unique passwords for every account.",
+                    "Use a password manager to help protect your passwords.",
                     "Enable multi-factor authentication wherever possible."
                 },
                 ["phishing"] = new List<string>
                 {
                     "Check the sender's address and avoid suspicious links.",
                     "Never share passwords or verification codes through unexpected messages.",
-                    "If a message creates urgency, verify it through the organisation's official website."
+                    "Verify suspicious messages through the organisation's official website."
                 },
                 ["scam"] = new List<string>
                 {
@@ -38,10 +41,15 @@ namespace CyberSafeAwarenessBot2
                 ["privacy"] = new List<string>
                 {
                     "Review your privacy settings on social media.",
-                    "Avoid sharing your address, passwords or other sensitive information online.",
+                    "Avoid sharing sensitive personal information online.",
                     "Check app permissions and disable access you do not need."
                 }
             };
+
+        public ResponseHandler()
+        {
+            _responseMethod = GenerateResponse;
+        }
 
         public string GetResponse(string message)
         {
@@ -50,114 +58,164 @@ namespace CyberSafeAwarenessBot2
 
             try
             {
-                string input = message.Trim();
-                string lowerInput = input.ToLowerInvariant();
-
-                // Remember the user's name.
-                if (lowerInput.StartsWith("my name is "))
-                {
-                    _userName = input.Substring(11).Trim();
-
-                    if (_userName.Length == 0)
-                        return "Please tell me your name after 'My name is'.";
-
-                    return $"Nice to meet you, {_userName}! I'll remember your name during this conversation.";
-                }
-
-                // Remember the user's favourite topic.
-                if (lowerInput.StartsWith("my favourite topic is "))
-                {
-                    _favouriteTopic = input.Substring(22).Trim();
-
-                    if (_favouriteTopic.Length == 0)
-                        return "Please tell me your favourite topic.";
-
-                    return $"I'll remember that your favourite topic is {_favouriteTopic}.";
-                }
-
-                if (lowerInput.Contains("what is my name") ||
-                    lowerInput.Contains("what's my name"))
-                {
-                    return string.IsNullOrEmpty(_userName)
-                        ? "You haven't told me your name yet. Try saying 'My name is ...'."
-                        : $"Your name is {_userName}.";
-                }
-
-                if (lowerInput.Contains("favourite topic") &&
-                    (lowerInput.Contains("remember") ||
-                     lowerInput.Contains("what is") ||
-                     lowerInput.Contains("what's")))
-                {
-                    return string.IsNullOrEmpty(_favouriteTopic)
-                        ? "You haven't told me your favourite topic yet."
-                        : $"Your favourite topic is {_favouriteTopic}.";
-                }
-
-                // Detect feelings and provide useful guidance.
-                if (lowerInput.Contains("worried") ||
-                    lowerInput.Contains("scared") ||
-                    lowerInput.Contains("frustrated"))
-                {
-                    if (lowerInput.Contains("scam") ||
-                        lowerInput.Contains("phishing"))
-                    {
-                        _lastTopic = lowerInput.Contains("phishing")
-                            ? "phishing" : "scam";
-
-                        return "It's understandable to feel concerned. Don't click suspicious links or share personal details. " +
-                               _responses[_lastTopic][_random.Next(_responses[_lastTopic].Count)];
-                    }
-
-                    return "I understand that this can feel stressful. Take your time, and I can help you learn how to stay safe online.";
-                }
-
-                if (lowerInput.Contains("curious"))
-                {
-                    return "It's good to be curious! Ask me about passwords, phishing, scams or privacy.";
-                }
-
-                // Handle requests for another tip or more information.
-                if (lowerInput.Contains("another tip") ||
-                    lowerInput.Contains("tell me more") ||
-                    lowerInput.Contains("explain more") ||
-                    lowerInput.Contains("more tips"))
-                {
-                    if (_responses.ContainsKey(_lastTopic))
-                        return _responses[_lastTopic][
-                            _random.Next(_responses[_lastTopic].Count)];
-
-                    return "Which topic would you like to explore: passwords, phishing, scams or privacy?";
-                }
-
-                // Recognise cybersecurity topics.
-                foreach (var topic in _responses.Keys)
-                {
-                    if (lowerInput.Contains(topic))
-                    {
-                        _lastTopic = topic;
-                        string response = _responses[topic][
-                            _random.Next(_responses[topic].Count)];
-
-                        return string.IsNullOrEmpty(_userName)
-                            ? response
-                            : $"{_userName}, {char.ToLower(response[0])}{response.Substring(1)}";
-                    }
-                }
-
-                if (lowerInput == "hi" || lowerInput == "hello" ||
-                    lowerInput.StartsWith("hi ") || lowerInput.StartsWith("hello "))
-                {
-                    return string.IsNullOrEmpty(_userName)
-                        ? "Hello! Ask me about passwords, phishing, scams or privacy. You can also tell me your name."
-                        : $"Hello, {_userName}! What would you like to learn about today?";
-                }
-
-                return "I'm not sure I understand. Try asking about passwords, phishing, scams or privacy.";
+                return _responseMethod(message.Trim());
             }
             catch (Exception)
             {
-                return "Sorry, something went wrong while processing your message. Please try again.";
+                return "Sorry, something went wrong. Please try asking your question again.";
             }
+        }
+
+        private string GenerateResponse(string message)
+        {
+            string input = message.Trim();
+            string text = input.ToLowerInvariant();
+
+            // Remember the user's name.
+            if (text.StartsWith("my name is "))
+            {
+                _userName = input.Substring(11).Trim();
+
+                return _userName.Length == 0
+                    ? "Please tell me your name."
+                    : $"Nice to meet you, {_userName}! I'll remember your name during this conversation.";
+            }
+
+            // Remember a favourite topic.
+            if (text.StartsWith("my favourite topic is "))
+            {
+                _favouriteTopic = input.Substring(22).Trim();
+
+                return _favouriteTopic.Length == 0
+                    ? "Please tell me your favourite topic."
+                    : $"I'll remember that your favourite topic is {_favouriteTopic}.";
+            }
+
+            // Remember interests expressed naturally.
+            if (text.Contains("interested in"))
+            {
+                foreach (string topic in _responses.Keys)
+                {
+                    if (text.Contains(topic))
+                    {
+                        _favouriteTopic = topic;
+                        _lastTopic = topic;
+
+                        return $"Great! I'll remember that you're interested in {topic}. " +
+                               GetRandomTip(topic);
+                    }
+                }
+            }
+
+            // Recall personal information.
+            if (text.Contains("what is my name") ||
+                text.Contains("what's my name"))
+            {
+                return string.IsNullOrEmpty(_userName)
+                    ? "You haven't told me your name yet. Say 'My name is ...'."
+                    : $"Your name is {_userName}.";
+            }
+
+            if (text.Contains("favourite topic") &&
+                (text.Contains("what is") || text.Contains("what's") ||
+                 text.Contains("remember")))
+            {
+                return string.IsNullOrEmpty(_favouriteTopic)
+                    ? "You haven't told me your favourite topic yet."
+                    : $"Your favourite topic is {_favouriteTopic}.";
+            }
+
+            // Detect sentiment and immediately provide relevant guidance.
+            bool worried = ContainsAny(text, "worried", "scared", "afraid", "anxious");
+            bool frustrated = ContainsAny(text, "frustrated", "confused", "overwhelmed");
+            bool curious = text.Contains("curious");
+
+            if (worried || frustrated || curious)
+            {
+                string topic = FindTopic(text);
+
+                if (topic == "")
+                    topic = _lastTopic;
+
+                if (topic == "")
+                    topic = _favouriteTopic;
+
+                string acknowledgement = worried
+                    ? "It's understandable to feel worried. "
+                    : frustrated
+                        ? "Cybersecurity can be confusing, but you can learn it step by step. "
+                        : "It's good to be curious and learn how to stay safe. ";
+
+                if (_responses.ContainsKey(topic))
+                {
+                    _lastTopic = topic;
+                    return acknowledgement + GetRandomTip(topic);
+                }
+
+                return acknowledgement +
+                       "You can ask me about passwords, phishing, scams or privacy.";
+            }
+
+            // Continue the current topic.
+            if (ContainsAny(text, "another tip", "tell me more",
+                "explain more", "more tips", "explain further"))
+            {
+                string topic = _lastTopic;
+
+                if (topic == "")
+                    topic = _favouriteTopic;
+
+                return _responses.ContainsKey(topic)
+                    ? GetRandomTip(topic)
+                    : "Which topic interests you: passwords, phishing, scams or privacy?";
+            }
+
+            // Recognise cybersecurity keywords.
+            string recognisedTopic = FindTopic(text);
+
+            if (recognisedTopic != "")
+            {
+                _lastTopic = recognisedTopic;
+                string tip = GetRandomTip(recognisedTopic);
+
+                return string.IsNullOrEmpty(_userName)
+                    ? tip
+                    : $"{_userName}, {char.ToLowerInvariant(tip[0])}{tip.Substring(1)}";
+            }
+
+            if (ContainsAny(text, "hello", "hi", "hey"))
+            {
+                return string.IsNullOrEmpty(_userName)
+                    ? "Hello! Ask me about passwords, phishing, scams or privacy."
+                    : $"Hello, {_userName}! What would you like to learn about today?";
+            }
+
+            if (text.Contains("thank"))
+                return "You're welcome! Staying informed is an important step towards online safety.";
+
+            return "I'm not sure I understand. Please try rephrasing, or ask about passwords, phishing, scams or privacy.";
+        }
+
+        private string FindTopic(string text)
+        {
+            foreach (string topic in _responses.Keys)
+            {
+                if (text.Contains(topic))
+                    return topic;
+            }
+
+            return "";
+        }
+
+        private string GetRandomTip(string topic)
+        {
+            List<string> tips = _responses[topic];
+            return tips[_random.Next(tips.Count)];
+        }
+
+        private bool ContainsAny(string text, params string[] words)
+        {
+            return words.Any(word => text.Contains(word));
         }
     }
 }
