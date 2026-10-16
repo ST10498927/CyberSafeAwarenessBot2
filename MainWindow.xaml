@@ -43,18 +43,10 @@
                             Margin="0,0,16,0"
                             VerticalAlignment="Center">
 
-                        <TextBlock FontFamily="Consolas"
-                                   FontSize="13"
-                                   FontWeight="Bold"
-                                   Foreground="#B9380A"
-                                   TextAlignment="Center"
-                                   xml:space="preserve">  /\
- /  \
-/ /\ \
-| || |
-| || |
-\____/
- STAY SAFE</TextBlock>
+                        <Image Source="CyberSafeASCII.png"
+                               Width="125"
+                               Height="100"
+                               Stretch="Uniform"/>
                     </Border>
 
                     <StackPanel Grid.Column="1"
