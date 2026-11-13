@@ -1,0 +1,12 @@
+﻿CREATE DATABASE IF NOT EXISTS CyberSecurityBotDB;
+
+USE CyberSecurityBotDB;
+
+CREATE TABLE IF NOT EXISTS cyber_tasks (
+    task_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(150) NOT NULL,
+    description VARCHAR(500) NOT NULL,
+    reminder_date DATETIME NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
