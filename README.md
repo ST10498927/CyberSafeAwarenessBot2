@@ -30,10 +30,10 @@ CyberSafe Awareness Bot is a C# desktop application built with WPF to promote cy
 ## Continuous Integration
 GitHub Actions builds the solution automatically. View workflow results under the repository's **Actions** tab.
 
-**Successful CI screenshot:** Add the screenshot here after the workflow passes.
+**Successful CI screenshot:** `CI-success.png` (located in the repository root).
 
 ## Presentation
-**YouTube video:** Add your unlisted Part 2 presentation link here.
+**YouTube video:** https://youtu.be/OHb37F3pt2Y
 
 ## Academic Purpose
 Developed for the Programming 2A Portfolio of Evidence (PROG6221), demonstrating GUI development, generic collections, delegates, dynamic responses, memory, and sentiment detection.
