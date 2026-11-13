@@ -72,7 +72,8 @@
             </Border>
 
             <!-- Main Navigation -->
-            <TabControl Grid.Row="1"
+            <TabControl x:Name="MainTabControl"
+                        Grid.Row="1"
                         FontSize="14"
                         Background="White"
                         BorderBrush="#FED7AA"

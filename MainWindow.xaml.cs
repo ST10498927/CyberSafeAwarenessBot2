@@ -16,6 +16,7 @@ namespace CyberSafeAwarenessBot2
         private readonly Chatbot _chatbot;
         private readonly TaskRepository _taskRepository;
         private readonly QuizManager _quizManager;
+        private readonly IntentProcessor _intentProcessor;
 
         private SoundPlayer? _greetingPlayer;
         private int? _selectedAnswer;
@@ -27,6 +28,7 @@ namespace CyberSafeAwarenessBot2
             _chatbot = new Chatbot();
             _taskRepository = new TaskRepository();
             _quizManager = new QuizManager();
+            _intentProcessor = new IntentProcessor();
 
             PlayGreeting();
 
@@ -74,7 +76,7 @@ namespace CyberSafeAwarenessBot2
         }
 
         // -----------------------------------------
-        // CHATBOT
+        // CHATBOT AND NLP
         // -----------------------------------------
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -90,10 +92,38 @@ namespace CyberSafeAwarenessBot2
                         "Empty Message",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
+
                     return;
                 }
 
-                string response = _chatbot.GetResponse(message);
+                string intent = _intentProcessor.DetectIntent(message);
+                string response;
+
+                switch (intent)
+                {
+                    case "VIEW_TASKS":
+                        MainTabControl.SelectedIndex = 1;
+                        response = "I've opened your Tasks tab so you can view your cybersecurity tasks.";
+                        break;
+
+                    case "ADD_TASK":
+                        MainTabControl.SelectedIndex = 1;
+                        response = "I've opened the Tasks tab. Enter a task title, description and optional reminder.";
+                        break;
+
+                    case "START_QUIZ":
+                        MainTabControl.SelectedIndex = 2;
+                        response = "I've opened the Cyber Quiz. Test your cybersecurity knowledge!";
+                        break;
+
+                    case "PHISHING":
+                    case "PASSWORD":
+                    case "PRIVACY":
+                    case "GENERAL":
+                    default:
+                        response = _chatbot.GetResponse(message);
+                        break;
+                }
 
                 ChatHistory.Text += Environment.NewLine
                     + "You: " + message
@@ -101,15 +131,15 @@ namespace CyberSafeAwarenessBot2
                     + "Bot: " + response
                     + Environment.NewLine;
 
-                LogActivity("Chatbot interaction: " + message);
+                LogActivity("Chat interaction: " + message);
 
                 UserInput.Clear();
                 UserInput.Focus();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Sorry, something went wrong. Please try again.",
+                    "Sorry, something went wrong: " + ex.Message,
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -146,6 +176,7 @@ namespace CyberSafeAwarenessBot2
                     "Missing Information",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
+
                 return;
             }
 
@@ -287,6 +318,9 @@ namespace CyberSafeAwarenessBot2
 
             QuizFeedbackText.Text = "Select an answer and submit.";
 
+            QuizFeedbackText.Foreground =
+                System.Windows.Media.Brushes.DarkSlateGray;
+
             QuizScoreText.Text = "Score: " + _quizManager.Score;
 
             SubmitAnswerButton.IsEnabled = true;
@@ -327,16 +361,10 @@ namespace CyberSafeAwarenessBot2
                 option.IsEnabled = false;
             }
 
-            if (_quizManager.LastAnswerCorrect)
-            {
-                QuizFeedbackText.Foreground =
-                    System.Windows.Media.Brushes.Green;
-            }
-            else
-            {
-                QuizFeedbackText.Foreground =
-                    System.Windows.Media.Brushes.Red;
-            }
+            QuizFeedbackText.Foreground =
+                _quizManager.LastAnswerCorrect
+                    ? System.Windows.Media.Brushes.Green
+                    : System.Windows.Media.Brushes.Red;
 
             LogActivity(
                 _quizManager.LastAnswerCorrect
@@ -374,7 +402,8 @@ namespace CyberSafeAwarenessBot2
             QuizOptionsPanel.Children.Clear();
 
             double percentage =
-                (double)_quizManager.Score / _quizManager.TotalQuestions * 100;
+                (double)_quizManager.Score /
+                _quizManager.TotalQuestions * 100;
 
             QuizFeedbackText.Text =
                 $"Final result: {_quizManager.Score} out of {_quizManager.TotalQuestions} correct.";
@@ -414,7 +443,6 @@ namespace CyberSafeAwarenessBot2
 
             ActivityLogList.Items.Insert(0, entry);
 
-            // Keep the most recent 10 activities.
             while (ActivityLogList.Items.Count > 10)
             {
                 ActivityLogList.Items.RemoveAt(
